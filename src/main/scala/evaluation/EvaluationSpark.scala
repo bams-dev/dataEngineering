@@ -65,8 +65,24 @@ object EvaluationSpark {
 
     println("\n[EX 1 - Partie C] Schema explicite + gestion des nulls")
     println("─" * 65)
-    // Passage du chemin d'accès au fichier pour permettre le rechargement explicite
     exercice1_expert(spark, ventesCsvPath).show(10, truncate = false)
+
+    // ════════════════════════════════════════════════════════
+    // EXERCICE 2 — Jointures & Segmentation client
+    // ════════════════════════════════════════════════════════
+    println("\n" + "─" * 65)
+    println("[EX 2 - Partie A] Inner Join + Segmentation")
+    println("─" * 65)
+    exercice2_debutant(spark, ventesDF, clientsDF).show(10, truncate = false)
+
+    println("\n[EX 2 - Partie B] Left Join + Union des mouvements")
+    println("─" * 65)
+    exercice2_intermediaire(spark, ventesDF, clientsDF, retournsDF).show(10, truncate = false)
+
+    println("\n[EX 2 - Partie C] Semi Join / Anti Join")
+    println("─" * 65)
+    exercice2_expert(spark, ventesDF, retournsDF).show(10, truncate = false)
+
     spark.stop()
   }
 
@@ -135,14 +151,11 @@ object EvaluationSpark {
     import org.apache.spark.sql.functions._
     import org.apache.spark.sql.types._
 
-    // 1. On charge d'abord en mode PERMISSIVE avec inférence automatique
-    // pour ne pas casser l'ordre naturel des colonnes du fichier
     val dfOriginal = spark.read
       .option("header", "true")
       .option("mode", "PERMISSIVE")
       .csv(csvPath)
 
-    // 2. On applique un cast explicite sur les types
     val dfCaster = dfOriginal
       .withColumn("vente_id", col("vente_id").cast(StringType))
       .withColumn("date_vente", col("date_vente").cast(DateType))
@@ -150,16 +163,100 @@ object EvaluationSpark {
       .withColumn("quantite", col("quantite").cast(IntegerType))
       .withColumn("statut", col("statut").cast(StringType))
 
-    // 3. Compter le nombre exact de vraies lignes dont le montant est null
     val nbNulls = dfCaster.filter(col("montant_fcfa").isNull).count()
     println(s"Nombre de lignes avec montant_fcfa à null : $nbNulls")
 
-    // 4 & 5. Remplacer les nulls par 0 et ajouter l'indicateur de correction
     dfCaster
       .withColumn("est_corrige", col("montant_fcfa").isNull)
       .na.fill(Map("montant_fcfa" -> 0L))
       .select("vente_id", "date_vente", "montant_fcfa", "statut", "est_corrige")
+  }
 
-}
+  // ══════════════════════════════════════════════════════════
+  // EXERCICE 2 — Jointures & Segmentation client (5 pts)
+  // ══════════════════════════════════════════════════════════
 
-}
+  /**
+   * Partie A — Debutant (1 pt) — inner join + when/otherwise
+   */
+  def exercice2_debutant(
+                          spark: SparkSession,
+                          ventesDF: DataFrame,
+                          clientsDF: DataFrame
+                        ): DataFrame = {
+    import org.apache.spark.sql.functions._
+
+    ventesDF.join(clientsDF, "client_id")
+      .groupBy("client_id", "client_nom", "ville")
+      .agg(sum("montant_fcfa").as("ca_total"))
+      .withColumn("segment",
+        when(col("ca_total") >= 1000000, "GOLD")
+          .when(col("ca_total") >= 400000, "SILVER")
+          .otherwise("BRONZE")
+      )
+      .select("client_id", "client_nom", "ville", "ca_total", "segment")
+      .sort(col("ca_total").desc)
+  }
+
+  /**
+   * Partie B — Intermediaire (1 pt) — left join + union
+   */
+  def exercice2_intermediaire(
+                               spark: SparkSession,
+                               ventesDF: DataFrame,
+                               clientsDF: DataFrame,
+                               retournsDF: DataFrame
+                             ): DataFrame = {
+    import org.apache.spark.sql.functions._
+
+    val dfVentes = ventesDF.join(clientsDF, Seq("client_id"), "left")
+      .filter(col("statut") === "livree")
+      .withColumn("type_mouvement", lit("VENTE"))
+      .select(
+        col("client_id"),
+        col("client_nom"),
+        col("date_vente").as("date_mouvement"),
+        col("montant_fcfa").as("montant"),
+        col("type_mouvement")
+      )
+
+    val dfRetours = retournsDF
+      .withColumn("type_mouvement", lit("RETOUR"))
+      .withColumn("montant", -col("montant_retour"))
+      .select(
+        col("client_id"),
+        lit(null).cast("string").as("client_nom"),
+        col("date_retour").as("date_mouvement"),
+        col("montant"),
+        col("type_mouvement")
+      )
+
+    dfVentes.unionByName(dfRetours)
+      .sort(col("client_id").asc, col("date_mouvement").asc)
+  }
+
+  /**
+   * Partie C — Expert (1 pt) — Semi join & Anti join
+   */
+  def exercice2_expert(
+                        spark: SparkSession,
+                        ventesDF: DataFrame,
+                        retournsDF: DataFrame
+                      ): DataFrame = {
+    import org.apache.spark.sql.functions._
+
+    val acheteursAvecRetour = ventesDF.join(retournsDF, Seq("client_id"), "left_semi")
+      .withColumn("profil", lit("ACHETEUR+RETOUR"))
+      .select("client_id", "profil")
+      .distinct()
+
+    val acheteursFideles = ventesDF.join(retournsDF, Seq("client_id"), "left_anti")
+      .withColumn("profil", lit("ACHETEUR_FIDELE"))
+      .select("client_id", "profil")
+      .distinct()
+
+    acheteursAvecRetour.unionByName(acheteursFideles)
+      .sort(col("profil").asc, col("client_id").asc)
+  }
+
+} // <--- L'accolade finale fermant l'objet est bien ici maintenant !
