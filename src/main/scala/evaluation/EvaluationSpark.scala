@@ -83,6 +83,22 @@ object EvaluationSpark {
     println("─" * 65)
     exercice2_expert(spark, ventesDF, retournsDF).show(10, truncate = false)
 
+    // ════════════════════════════════════════════════════════
+    // EXERCICE 3 — Restructuration
+    // ════════════════════════════════════════════════════════
+    println("\n" + "─" * 65)
+    println("[EX 3 - Partie A] Tableau Croisé (Pivot)")
+    println("─" * 65)
+    exercice3_debutant(spark, ventesDF, produitsDF).show(10, truncate = false)
+
+    println("\n[EX 3 - Partie B] Premier Mot du Motif (Posexplode)")
+    println("─" * 65)
+    exercice3_intermediaire(spark, ventesDF, retournsDF).show(10, truncate = false)
+
+    println("\n[EX 3 - Partie C] Unpivot Financier (Stack)")
+    println("─" * 65)
+    exercice3_expert(spark, ventesDF, produitsDF).show(10, truncate = false)
+
     spark.stop()
   }
 
@@ -259,4 +275,66 @@ object EvaluationSpark {
       .sort(col("profil").asc, col("client_id").asc)
   }
 
+  // ══════════════════════════════════════════════════════════
+  // EXERCICE 3 — Restructuration (5 pts)
+  // Thèmes : pivot, posexplode, unionByName, stack() unpivot
+  // ══════════════════════════════════════════════════════════
+
+  /**
+   * Partie A — Debutant (1 pt) — pivot correct + na.fill
+   * * Objectif : Créer un tableau croisé du montant total des ventes par catégorie et par statut.
+   * * Colonnes attendues : categorie | annulee | en_cours | livree
+   */
+  def exercice3_debutant(spark: SparkSession, ventesDF: DataFrame, produitsDF: DataFrame): DataFrame = {
+    import org.apache.spark.sql.functions._
+
+    ventesDF.join(produitsDF, "produit_id")
+      .groupBy("categorie")
+      .pivot("statut")
+      .agg(sum("montant_fcfa"))
+      .na.fill(0L)
+      .sort(col("categorie").asc)
+  }
+
+  /**
+   * Partie B — Intermediaire (1 pt) — posexplode + filtre pos = 0
+   * * Colonnes attendues : vente_id | premier_mot_motif | montant_fcfa
+   */
+  def exercice3_intermediaire(spark: SparkSession, ventesDF: DataFrame, retournsDF: DataFrame): DataFrame = {
+    import org.apache.spark.sql.functions._
+
+    // Jointure explicite car le nom de la colonne diffère à droite (vente_id_origine)
+    val dfJoint = ventesDF.join(retournsDF, ventesDF("vente_id") === retournsDF("vente_id_origine"))
+
+    dfJoint.select(
+        ventesDF("vente_id"),
+        posexplode(split(col("motif"), " ")).as(Seq("pos", "mot")),
+        col("montant_fcfa")
+      )
+      .filter(col("pos") === 0)
+      .withColumnRenamed("mot", "premier_mot_motif")
+      .select("vente_id", "premier_mot_motif", "montant_fcfa")
+  }
+  /**
+   * Partie C — Expert (1 pt) — unionByName + stack() unpivot
+    Passeons les colonnes de métriques en lignes (Unpivot).
+   * * Colonnes attendues : categorie | indicateur_financier | valeur
+   */
+  def exercice3_expert(spark: SparkSession, ventesDF: DataFrame, produitsDF: DataFrame): DataFrame = {
+    import org.apache.spark.sql.functions._
+
+    val dfAgrege = ventesDF.join(produitsDF, "produit_id")
+      .groupBy("categorie")
+      .agg(
+        sum("montant_fcfa").cast(LongType).as("total_recettes"),
+        avg("montant_fcfa").cast(LongType).as("moyenne_recettes")
+      )
+
+    dfAgrege.select(
+        col("categorie"),
+        expr("stack(2, 'TOTAL_RECETTES', total_recettes, 'MOYENNE_RECETTES', moyenne_recettes)")
+          .as(Seq("indicateur_financier", "valeur"))
+      )
+      .sort(col("categorie").asc, col("indicateur_financier").desc)
+  }
 } // <--- L'accolade finale fermant l'objet est bien ici maintenant !
