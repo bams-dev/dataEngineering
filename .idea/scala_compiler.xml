@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ScalaCompilerConfiguration">
-    <option name="separateProdTestSources" value="true" />
-    <profile name="sbt 1" modules="evaluation-spark-m2,evaluation-spark-m2.main,evaluation-spark-m2.test,projet-sbt_5405,projet-sbt_5405.main,projet-sbt_5405.test" />
-  </component>
-</project>
