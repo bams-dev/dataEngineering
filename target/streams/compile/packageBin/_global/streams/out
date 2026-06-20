@@ -1,0 +1,19 @@
+[debug] Packaging C:\Users\itbam\Documents\DIT\MASTER-2\Data eng\DIT_DEVOIR_DISTANT\ProjetSBT_Spark_M2_Finals\projet-sbt\target\scala-2.12\evaluation-spark-m2_2.12-1.0.jar ...
+[debug] Input file mappings:
+[debug] 	clients.csv
+[debug] 	  C:\Users\itbam\Documents\DIT\MASTER-2\Data eng\DIT_DEVOIR_DISTANT\ProjetSBT_Spark_M2_Finals\projet-sbt\target\scala-2.12\classes\clients.csv
+[debug] 	evaluation
+[debug] 	  C:\Users\itbam\Documents\DIT\MASTER-2\Data eng\DIT_DEVOIR_DISTANT\ProjetSBT_Spark_M2_Finals\projet-sbt\target\scala-2.12\classes\evaluation
+[debug] 	evaluation\EvaluationSpark$.class
+[debug] 	  C:\Users\itbam\Documents\DIT\MASTER-2\Data eng\DIT_DEVOIR_DISTANT\ProjetSBT_Spark_M2_Finals\projet-sbt\target\scala-2.12\classes\evaluation\EvaluationSpark$.class
+[debug] 	evaluation\EvaluationSpark.class
+[debug] 	  C:\Users\itbam\Documents\DIT\MASTER-2\Data eng\DIT_DEVOIR_DISTANT\ProjetSBT_Spark_M2_Finals\projet-sbt\target\scala-2.12\classes\evaluation\EvaluationSpark.class
+[debug] 	produits.csv
+[debug] 	  C:\Users\itbam\Documents\DIT\MASTER-2\Data eng\DIT_DEVOIR_DISTANT\ProjetSBT_Spark_M2_Finals\projet-sbt\target\scala-2.12\classes\produits.csv
+[debug] 	retours.csv
+[debug] 	  C:\Users\itbam\Documents\DIT\MASTER-2\Data eng\DIT_DEVOIR_DISTANT\ProjetSBT_Spark_M2_Finals\projet-sbt\target\scala-2.12\classes\retours.csv
+[debug] 	SEED.txt
+[debug] 	  C:\Users\itbam\Documents\DIT\MASTER-2\Data eng\DIT_DEVOIR_DISTANT\ProjetSBT_Spark_M2_Finals\projet-sbt\target\scala-2.12\classes\SEED.txt
+[debug] 	ventes.csv
+[debug] 	  C:\Users\itbam\Documents\DIT\MASTER-2\Data eng\DIT_DEVOIR_DISTANT\ProjetSBT_Spark_M2_Finals\projet-sbt\target\scala-2.12\classes\ventes.csv
+[debug] Done packaging.

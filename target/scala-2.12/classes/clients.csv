@@ -1,0 +1,21 @@
+client_id,client_nom,ville,email,date_inscription,est_premium
+CLI008,Rokhaya Mbaye,Thiès,rokhaya.mbaye@email.sn,2022-03-01,true
+CLI016,Khady Niang,Diourbel,khady.niang@email.sn,2020-07-01,false
+CLI006,Mariama Diop,Kaolack,mariama.diop@email.sn,2023-02-01,false
+CLI001,Amadou Diallo,Dakar,amadou.diallo@email.sn,2020-02-01,false
+CLI011,Babacar Sarr,Saint-Louis,babacar.sarr@email.sn,2021-09-01,true
+CLI009,Cheikh Gueye,Kaolack,cheikh.gueye@email.sn,2020-05-01,true
+CLI003,Ibrahima Fall,Saint-Louis,ibrahima.fall@email.sn,2020-04-01,false
+CLI019,Lamine Seck,Kaolack,lamine.seck@email.sn,2021-11-01,true
+CLI010,Ndeye Sylla,Dakar,ndeye.sylla@email.sn,2021-04-01,false
+CLI015,Serigne Thiam,Dakar,serigne.thiam@email.sn,2021-01-01,false
+CLI017,Modou Diallo,Dakar,modou.diallo@email.sn,2022-04-01,false
+CLI013,Pape Diouf,Saint-Louis,pape.diouf@email.sn,2021-05-01,false
+CLI014,Yaye Kane,Ziguinchor,yaye.kane@email.sn,2021-04-01,false
+CLI018,Sokhna Faye,Thiès,sokhna.faye@email.sn,2021-08-01,false
+CLI002,Fatou Sow,Thiès,fatou.sow@email.sn,2020-12-01,false
+CLI007,Abdoulaye Camara,Dakar,abdoulaye.camara@email.sn,2021-12-01,false
+CLI004,Aissatou Ndiaye,Ziguinchor,aissatou.ndiaye@email.sn,2023-08-01,false
+CLI005,Ousmane Ba,Dakar,ousmane.ba@email.sn,2021-04-01,false
+CLI020,Binta Baldé,Ziguinchor,binta.balde@email.sn,2020-11-01,true
+CLI012,Aminata Touré,Dakar,aminata.toure@email.sn,2023-09-01,false

@@ -1,0 +1,13 @@
+produit_id,produit_nom,categorie,prix_min_fcfa,prix_max_fcfa,tags
+P001,Laptop Pro 15,Informatique,750000,1200000,"portable,pro,haute-performance"
+P002,Smartphone X12,Téléphonie,250000,450000,"ecran-amoled,4G,mobile"
+P003,Casque Bluetooth,Audio,35000,80000,"sport,audio,sans-fil"
+P004,Tablette Ultra,Informatique,200000,380000,"portable,multimedia,ecran"
+P005,Chargeur Rapide,Accessoires,12000,25000,"rapide,accessoire,usb-c"
+P006,Écouteurs Pro,Audio,25000,60000,"audio,sport,leger"
+P007,Clavier Mécanique,Informatique,55000,110000,"rgb,gaming,pro"
+P008,Webcam HD,Informatique,45000,90000,"video,reunion,hd"
+P009,Disque SSD 1To,Stockage,80000,150000,"portable,stockage,rapide"
+P010,Switch 8 ports,Réseau,35000,70000,"reseau,gigabit,pro"
+P011,Souris Ergonomique,Accessoires,18000,45000,"accessoire,ergonomique,sans-fil"
+P012,Écran 27 pouces,Informatique,180000,350000,"ecran,dalle-ips,4k"
