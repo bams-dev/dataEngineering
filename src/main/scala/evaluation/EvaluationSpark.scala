@@ -99,6 +99,22 @@ object EvaluationSpark {
     println("─" * 65)
     exercice3_expert(spark, ventesDF, produitsDF).show(10, truncate = false)
 
+    // ════════════════════════════════════════════════════════
+    // EXERCICE 4 — Analyse avancee & Window
+    // ════════════════════════════════════════════════════════
+    println("\n" + "─" * 65)
+    println("[EX 4 - Partie A] Classement Top 3 des ventes par Produit (Rank)")
+    println("─" * 65)
+    exercice4_debutant(spark, ventesDF).show(10, truncate = false)
+
+    println("\n[EX 4 - Partie B] Analyse de Tendance Temporelle (Lag & Cumul)")
+    println("─" * 65)
+    exercice4_intermediaire(spark, ventesDF).show(10, truncate = false)
+
+    println("\n[EX 4 - Partie C] Profil Cumulé & Dernière Vente Client")
+    println("─" * 65)
+    exercice4_expert(spark, ventesDF).show(10, truncate = false)
+
     spark.stop()
   }
 
@@ -337,4 +353,87 @@ object EvaluationSpark {
       )
       .sort(col("categorie").asc, col("indicateur_financier").desc)
   }
-} // <--- L'accolade finale fermant l'objet est bien ici maintenant !
+  // ══════════════════════════════════════════════════════════
+  // EXERCICE 4 — Analyse avancee & Window (5 pts)
+  // Thèmes : WindowSpec, rank(), lag(), running_total, lead/first/last
+  // ══════════════════════════════════════════════════════════
+
+  /**
+   * Partie A — Debutant (1 pt) — rank() + top 3 + medaille
+   * * Classeons les ventes de chaque produit par montant décroissant et attribuer des médailles au Top 3.
+   * * Colonnes attendues : produit_id | vente_id | montant_fcfa | rang | medaille
+   */
+  def exercice4_debutant(spark: SparkSession, ventesDF: DataFrame): DataFrame = {
+    import org.apache.spark.sql.functions._
+    import org.apache.spark.sql.expressions.Window
+
+    // Fenêtre partitionnée par produit et triée par montant décroissant
+    val windowSpec = Window.partitionBy("produit_id").orderBy(col("montant_fcfa").desc)
+
+    ventesDF
+      .withColumn("rang", rank().over(windowSpec))
+      .filter(col("rang") <= 3)
+      .withColumn("medaille",
+        when(col("rang") === 1, "OR")
+          .when(col("rang") === 2, "ARGENT")
+          .otherwise("BRONZE")
+      )
+      .select("produit_id", "vente_id", "montant_fcfa", "rang", "medaille")
+      .sort(col("produit_id").asc, col("rang").asc)
+  }
+
+  /**
+   * Partie B — Intermediaire (1 pt) — lag() + running_total + tendance
+   * * Objectif : Suivre l'évolution chronologique des ventes globales.
+   * * Colonnes attendues : date_vente | montant_du_jour | ca_cumule | montant_precedent | tendance
+   */
+  def exercice4_intermediaire(spark: SparkSession, ventesDF: DataFrame): DataFrame = {
+    import org.apache.spark.sql.functions._
+    import org.apache.spark.sql.expressions.Window
+
+    // 1. Agrégation par jour pour avoir le montant du jour
+    val dfJournalier = ventesDF
+      .groupBy("date_vente")
+      .agg(sum("montant_fcfa").as("montant_du_jour"))
+
+    // Fenêtres temporelles globales (sans partition)
+    val windowCumul = Window.orderBy("date_vente").rowsBetween(Window.unboundedPreceding, Window.currentRow)
+    val windowLag = Window.orderBy("date_vente")
+
+    // 2. Calculs analytiques
+    dfJournalier
+      .withColumn("ca_cumule", sum("montant_du_jour").over(windowCumul))
+      .withColumn("montant_precedent", lag("montant_du_jour", 1).over(windowLag))
+      .withColumn("tendance",
+        when(col("montant_precedent").isNull, "STABLE")
+          .when(col("montant_du_jour") > col("montant_precedent"), "HAUSSE")
+          .when(col("montant_du_jour") < col("montant_precedent"), "BAISSE")
+          .otherwise("STABLE")
+      )
+      .select("date_vente", "montant_du_jour", "ca_cumule", "montant_precedent", "tendance")
+      .sort(col("date_vente").asc)
+  }
+
+  /**
+   * Partie C — Expert (1 pt) — cumul client + fidelite
+   * * Colonnes attendues : client_id | vente_id | date_vente | montant_fcfa | cumul_achats | est_derniere_vente
+   */
+  def exercice4_expert(spark: SparkSession, ventesDF: DataFrame): DataFrame = {
+    import org.apache.spark.sql.functions._
+    import org.apache.spark.sql.expressions.Window
+
+    // Fenêtre pour le cumul (triée chronologiquement)
+    val windowCumul = Window.partitionBy("client_id").orderBy("date_vente")
+      .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+
+    // Fenêtre pour identifier la toute dernière vente (triée par date décroissante)
+    val windowDerniere = Window.partitionBy("client_id").orderBy(col("date_vente").desc)
+
+    ventesDF
+      .withColumn("cumul_achats", sum("montant_fcfa").over(windowCumul))
+      .withColumn("rang_chronologique", row_number().over(windowDerniere))
+      .withColumn("est_derniere_vente", col("rang_chronologique") === 1)
+      .select("client_id", "vente_id", "date_vente", "montant_fcfa", "cumul_achats", "est_derniere_vente")
+      .sort(col("client_id").asc, col("date_vente").asc)
+  }
+} // <--- L'accolade finale fermant l'objet !
